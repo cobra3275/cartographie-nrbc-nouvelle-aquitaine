@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cartographie NRBC – Nouvelle-Aquitaine</title>
+<style>
+:root{font-family:system-ui,Arial,sans-serif;color:#1e293b;background:#f6f8fc}body{margin:0;padding:18px}h1{font-size:21px;margin:0 0 6px}.subtitle{color:#64748b;margin:0 0 15px}.layout{display:grid;grid-template-columns:minmax(320px,1.5fr) minmax(240px,1fr);gap:16px}.panel{background:white;border:1px solid #dbe2ed;border-radius:12px;padding:15px}.map{width:100%;height:580px}.department{fill:#dbeafe;stroke:#fff;stroke-width:1.5;cursor:pointer;transition:fill .15s}.department:hover,.department.selected{fill:#2563eb}.department-label{font-size:12px;font-weight:700;fill:#0f172a;pointer-events:none}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.stat{background:#eff6ff;padding:12px;border-radius:8px}.stat b{display:block;font-size:25px;margin-top:5px}.hint{color:#64748b;font-size:13px}.status{font-size:12px;color:#64748b;margin-top:12px}.legend{margin-top:8px;font-size:13px}button{border:1px solid #cbd5e1;background:white;border-radius:6px;padding:8px 12px;cursor:pointer}@media(max-width:800px){.layout{grid-template-columns:1fr}.map{height:430px}}
+</style>
+</head><body>
+<h1>🗺️ Cartographie NRBC – Nouvelle-Aquitaine</h1>
+<p class="subtitle">Répartition des qualifications par département • FR NRBC / EOR / TRAINER</p>
+<div class="layout"><section class="panel"><svg id="map" class="map" viewBox="-2.2 42.8 4.7 4.8" aria-label="Carte des départements de Nouvelle-Aquitaine"></svg><div class="legend">Cliquez sur un département pour afficher les effectifs.</div></section><section class="panel"><h2 id="dept-title">Nouvelle-Aquitaine</h2><p class="hint" id="dept-hint">Total des qualifications recensées</p><div class="stats"><div class="stat">FR NRBC<b id="fr">0</b></div><div class="stat">EOR<b id="eor">0</b></div><div class="stat">TRAINER<b id="trainer">0</b></div></div><p class="hint">Les effectifs correspondent aux qualifications enregistrées, et non nécessairement à des personnes distinctes.</p><button id="reset">Voir le total régional</button><p class="status" id="status">En attente de connexion aux données Grist.</p></section></div>
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script>
+const codes=['16','17','19','23','24','33','40','47','64','79','86','87'];
+const names={'16':'Charente','17':'Charente-Maritime','19':'Corrèze','23':'Creuse','24':'Dordogne','33':'Gironde','40':'Landes','47':'Lot-et-Garonne','64':'Pyrénées-Atlantiques','79':'Deux-Sèvres','86':'Vienne','87':'Haute-Vienne'};
+const totals={};for(const c of codes)totals[c]={FRNRBC:0,EOR:0,TRAINER:0};
+let chosen=null;
+function normalizeQual(q){return String(q??'').trim().toUpperCase().replace(/\s+/g,'');}
+function normalizeDept(v){const n=String(v??'').trim().match(/\d{2}/);return n?n[0]:'';}
+function display(){const v=chosen?totals[chosen]:Object.values(totals).reduce((acc,t)=>{for(const k of Object.keys(acc))acc[k]+=t[k];return acc},{FRNRBC:0,EOR:0,TRAINER:0});document.getElementById('dept-title').textContent=chosen?`${names[chosen]} (${chosen})`:'Nouvelle-Aquitaine';document.getElementById('dept-hint').textContent=chosen?'Qualifications du département':'Total des qualifications recensées';for(const [id,key] of [['fr','FRNRBC'],['eor','EOR'],['trainer','TRAINER']])document.getElementById(id).textContent=v[key];d3.selectAll('.department').classed('selected',d=>String(d.properties.code)===chosen);}
+document.getElementById('reset').onclick=()=>{chosen=null;display()};
+function applyRecords(records){for(const c of codes)totals[c]={FRNRBC:0,EOR:0,TRAINER:0};for(const r of records){const f=r.fields||r;const dept=normalizeDept(f.DEPARTEMENT);const qual=normalizeQual(f.QUALIFICATIONS);const n=Number(f.count??f.COUNT??0);if(totals[dept]&&Number.isFinite(n)&&['FRNRBC','EOR','TRAINER'].includes(qual))totals[dept][qual]+=n;}display();document.getElementById('status').textContent=`Données Grist reçues : ${records.length} lignes.`;}
+// API officielle du widget Grist, chargée uniquement lorsqu'il est intégré dans Grist.
+const script=document.createElement('script');script.src='https://docs.getgrist.com/grist-plugin-api.js';script.onload=()=>{if(window.grist){grist.ready({requiredAccess:'read table',columns:[{name:'QUALIFICATIONS',title:'Qualification',type:'Text'},{name:'DEPARTEMENT',title:'Département',type:'Any'},{name:'count',title:'Effectif',type:'Numeric'}]});grist.onRecords(records=>applyRecords(records));}};document.head.appendChild(script);
+// Contours administratifs départementaux (source ouverte). Aucune donnée nominative.
+fetch('https://raw.githubusercontent.com/gregoiredavid/france-geojson/master/departements.geojson').then(r=>{if(!r.ok)throw Error('GeoJSON indisponible');return r.json()}).then(geo=>{geo.features=geo.features.filter(f=>codes.includes(String(f.properties.code)));const svg=d3.select('#map'),projection=d3.geoMercator().fitSize([560,560],geo),path=d3.geoPath(projection);svg.attr('viewBox','0 0 560 560');svg.selectAll('path').data(geo.features).join('path').attr('class','department').attr('d',path).on('click',(event,d)=>{chosen=String(d.properties.code);display()}).append('title').text(d=>`${d.properties.nom} (${d.properties.code})`);svg.selectAll('text').data(geo.features).join('text').attr('class','department-label').attr('x',d=>path.centroid(d)[0]).attr('y',d=>path.centroid(d)[1]).attr('text-anchor','middle').text(d=>d.properties.code);display()}).catch(err=>{document.getElementById('status').textContent='Impossible de charger les contours de la carte : '+err.message});
+</script></body></html>
