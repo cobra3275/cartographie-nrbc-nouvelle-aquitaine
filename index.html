@@ -5,6 +5,73 @@
 <title>Cartographie NRBC – Nouvelle-Aquitaine</title>
 <style>
 :root{font-family:system-ui,Arial,sans-serif;color:#1e293b;background:#f6f8fc}body{margin:0;padding:18px}h1{font-size:21px;margin:0 0 6px}.subtitle{color:#64748b;margin:0 0 15px}.layout{display:grid;grid-template-columns:minmax(320px,1.5fr) minmax(240px,1fr);gap:16px}.panel{background:white;border:1px solid #dbe2ed;border-radius:12px;padding:15px}.map{width:100%;height:580px}.department{fill:#dbeafe;stroke:#fff;stroke-width:1.5;cursor:pointer;transition:fill .15s}.department:hover,.department.selected{fill:#2563eb}.department-label{font-size:12px;font-weight:700;fill:#0f172a;pointer-events:none}.stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}.stat{background:#eff6ff;padding:12px;border-radius:8px}.stat b{display:block;font-size:25px;margin-top:5px}.hint{color:#64748b;font-size:13px}.status{font-size:12px;color:#64748b;margin-top:12px}.legend{margin-top:8px;font-size:13px}button{border:1px solid #cbd5e1;background:white;border-radius:6px;padding:8px 12px;cursor:pointer}@media(max-width:800px){.layout{grid-template-columns:1fr}.map{height:430px}}
+/* ENCADRÉS DES QUALIFICATIONS NRBC */
+
+#listes-personnels {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 14px 0;
+}
+
+#listes-personnels details {
+  border-radius: 10px;
+  padding: 12px;
+  border: 1px solid transparent;
+}
+
+#listes-personnels summary {
+  cursor: pointer;
+  font-weight: bold;
+  padding: 3px 0;
+}
+
+#listes-personnels details > div {
+  margin-top: 10px;
+  padding: 8px 10px;
+  background: white;
+  border-radius: 7px;
+}
+
+/* CONSEILLER : BLEU */
+#listes-personnels details:nth-child(1) {
+  background: #EDF3FF;
+  border-color: #B9CEFA;
+  color: #245BC0;
+}
+
+/* FR NRBC : VERT */
+#listes-personnels details:nth-child(2) {
+  background: #EAF6EE;
+  border-color: #B6DFC2;
+  color: #267A49;
+}
+
+/* DÉSHABILLEUR : ORANGE */
+#listes-personnels details:nth-child(3) {
+  background: #FFF4E5;
+  border-color: #F3D5A5;
+  color: #9B5A10;
+}
+
+/* EOR : VIOLET */
+#listes-personnels details:nth-child(4) {
+  background: #F0EDFA;
+  border-color: #D4C5EF;
+  color: #7150A5;
+}
+
+/* TRAINER : GRIS */
+#listes-personnels details:nth-child(5) {
+  background: #F0F2F5;
+  border-color: #D0D7E0;
+  color: #45566E;
+}
+
+/* NOMS DES MILITAIRES */
+#listes-personnels details > div {
+  color: #233754;
+}
 </style>
 </head><body>
 <h1>🗺️ Cartographie NRBC – Nouvelle-Aquitaine</h1>
